@@ -258,7 +258,12 @@ public:
     void backPropagation(double **input, double **output, int datasetLength, double trainingRate, double threshold)
     {
 
-        int count = 1;
+        int count = 0;
+        //vectors used in the method
+        double *Xp, *Yp, *errors, *dNetOutput, *deltaOutput, *dNetHidden, *deltaHidden, *outputDerivative;
+        //matrices used in the method
+        double **outputLayerCorrection, **hiddenLayerCorrection;
+        State results;
 
         double squaredError = 2 * threshold;
         // Executes the loop while the error acceptance is not satiated
@@ -269,16 +274,16 @@ public:
             for (int p = 0; p < datasetLength; p++)
             {
                 // Extracts input pattern
-                double *Xp = input[p];
+                Xp = input[p];
                 // Extracts output pattern
-                double *Yp = output[p];
+                Yp = output[p];
 
                 // Obtains the results given by the network
-                State results = this->forward(Xp);
+                results = this->forward(Xp);
 
 #pragma region Output layer manipulation
                 // Declares a vector for the calculated errors
-                double *errors = (double *)calloc(this->outputLayerLength, sizeof(double));
+                errors = (double *)calloc(this->outputLayerLength, sizeof(double));
                 // Calculates the error for each value obtained
                 for (int i = 0; i < this->outputLayerLength; i++)
                 {
@@ -287,10 +292,10 @@ public:
                 }
 
                 // Finds the derivative of the line that represents the error
-                double *dNetOutput = dNet(results.fNetOutput, this->outputLayerLength);
+                dNetOutput = dNet(results.fNetOutput, this->outputLayerLength);
 
                 // Declares a vector for the calculated derivatives
-                double *deltaOutput = (double *)calloc(this->outputLayerLength, sizeof(double));
+                deltaOutput = (double *)calloc(this->outputLayerLength, sizeof(double));
                 // Calculates the derivative for each error stored
                 for (int i = 0; i < this->outputLayerLength; i++)
                 {
@@ -299,23 +304,23 @@ public:
 #pragma endregion
 
 #pragma region Hidden layer manipulation
-                double *intermediaryResult = vectorMatrixMultiplication(deltaOutput, this->outputLayer, this->outputLayerLength, this->hiddenLayerLength, this->outputLayerLength);
+                outputDerivative = vectorMatrixMultiplication(deltaOutput, this->outputLayer, this->outputLayerLength, this->hiddenLayerLength, this->outputLayerLength);
                // cout << "multipliado\n";
                 // Declares a vector for the calculated derivatives
-                double *deltaHidden = (double *)calloc(this->hiddenLayerLength, sizeof(double));
+                deltaHidden = (double *)calloc(this->hiddenLayerLength, sizeof(double));
 
                 // Finds the derivative of the line that represents the error
-                double *dNetHidden = dNet(results.fNetHidden, this->hiddenLayerLength);
+                dNetHidden = dNet(results.fNetHidden, this->hiddenLayerLength);
 
                 // Calculates the derivative for each error stored
                 for (int i = 0; i < this->hiddenLayerLength; i++)
                 {
-                    deltaHidden[i] = intermediaryResult[i] * dNetHidden[i];
+                    deltaHidden[i] = outputDerivative[i] * dNetHidden[i];
                 }
 #pragma endregion
 
 #pragma region Effective training
-                double **outputLayerCorrection = vectorMultiplication(deltaOutput, results.fNetHidden, this->outputLayerLength, this->hiddenLayerLength);
+                outputLayerCorrection = vectorMultiplication(deltaOutput, results.fNetHidden, this->outputLayerLength, this->hiddenLayerLength);
                 for (int i = 0; i < this->outputLayerLength; i++)
                 {
                     for (int j = 0; j < this->hiddenLayerLength + 1; j++)
@@ -324,7 +329,7 @@ public:
                     }
                 }
 
-                double **hiddenLayerCorrection = vectorMultiplication(deltaHidden, Xp, this->hiddenLayerLength, this->inputLength);
+                hiddenLayerCorrection = vectorMultiplication(deltaHidden, Xp, this->hiddenLayerLength, this->inputLength);
                 for (int i = 0; i < this->hiddenLayerLength; i++)
                 {
                     for (int j = 0; j < this->inputLength + 1; j++)
@@ -342,6 +347,16 @@ public:
             //cout << "Backpropagation Iteration number " << count << "\n";
             count++;
             cout << squaredError << " /= " << datasetLength << '\n';
+
+            //free all used memory
+            free(Xp);
+            free(Yp);
+            free(errors);
+            free(dNetOutput);
+            free(deltaOutput);
+            free(dNetHidden);
+            free(deltaHidden);
+            free(outputDerivative);
         }
     }
 
@@ -373,7 +388,7 @@ int main()
     output[2][0] = 1;
     output[3][0] = 0;
 
-    mlp->backPropagation(input, output, 4, 0.1, 0.253);
+    mlp->backPropagation(input, output, 4, 0.1, 0.01);
 
     cout << "\n\n\nInitiating executions:\n";
 
