@@ -16,7 +16,7 @@ double **listToPatternMatrix(list<double *> listToConvert, int rowCount, int col
 {
     list<double *>::iterator it;
     int i, j;
-    double **pattern = (double **)calloc(rowCount, sizeof(double **));
+    double **pattern = (double **)calloc(rowCount, sizeof(double *));
     for (i = 0, it = listToConvert.begin(); i < rowCount; i++, it++)
     {
         pattern[i] = (double *)calloc(columnCount + 1, sizeof(double));
@@ -65,20 +65,19 @@ double **readPatternFile(int inputLength)
 double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMatrix, int columnCountMatrix, int rowCountVector)
 {
     double *result;
-    result = (double *)calloc(rowCountMatrix, sizeof(double *));
+    result = (double *)calloc(rowCountMatrix, sizeof(double));
 
     if (columnCountMatrix == rowCountVector + 1)
     {
-        for (int i = 0; i < rowCountMatrix; i++)
+        for (int i = 0; i < rowCountMatrix; i++) 
         {
-            for (int j = 0; j < rowCountVector; j++)
+            for (int j = 0; j < rowCountVector; j++) 
             {
                 result[i] += matrix[i][j] * vec[j];
             }
             result[i] += matrix[i][rowCountVector];
         }
     }
-
     return result;
 }
 
@@ -86,15 +85,14 @@ double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMat
 double *vectorMatrixMultiplication(double *vec, double **matrix, int columnCountVector, int rowCountMatrix, int columnCountMatrix)
 {
     double *result;
-    result = (double *)calloc(columnCountMatrix, sizeof(double *));
-
+    result = (double *)calloc(columnCountMatrix, sizeof(double));
     if (columnCountVector == rowCountMatrix)
     {
         for (int i = 0; i < columnCountMatrix; i++)
         {
             for (int j = 0; j < columnCountVector; j++)
             {
-                result[i] += vec[j] * matrix[i][j];
+                result[i] += vec[j] * matrix[j][i];
             }
         }
     }
@@ -236,10 +234,14 @@ public:
     // Receives one input from the dataset and obtains a response from the network
     State forward(double *input)
     {
+        // Hidden layer
+
         // Finds the net value (sum of weighted inputs) received by the neuron in the hidden layer
         double *netHiddenLayer = matrixVectorMultiplication(this->hiddenLayer, input, this->hiddenLayerLength, this->inputLength + 1, this->inputLength);
         // Finds the values calculated by the hidden layer
         this->activation(netHiddenLayer, this->hiddenLayerLength);
+
+        // Output layer
 
         // Finds the net value (sum of weighted inputs) received by the neuron in the output layer
         double *netOutputLayer = matrixVectorMultiplication(this->outputLayer, netHiddenLayer, this->outputLayerLength, this->hiddenLayerLength + 1, this->hiddenLayerLength);
@@ -304,7 +306,7 @@ public:
 #pragma endregion
 
 #pragma region Hidden layer manipulation
-                outputDerivative = vectorMatrixMultiplication(deltaOutput, this->outputLayer, this->outputLayerLength, this->hiddenLayerLength, this->outputLayerLength);
+                outputDerivative = vectorMatrixMultiplication(deltaOutput, this->outputLayer, this->outputLayerLength, this->outputLayerLength , this->hiddenLayerLength);
                // cout << "multipliado\n";
                 // Declares a vector for the calculated derivatives
                 deltaHidden = (double *)calloc(this->hiddenLayerLength, sizeof(double));
@@ -372,23 +374,11 @@ int main()
     double **output = (double **)calloc(4, sizeof(double *));
     for (int i = 0; i < 4; i++)
     {
-        input[i] = (double *)calloc(2, sizeof(double));
+        input[i] = (double *)calloc(3, sizeof(double));
         output[i] = (double *)calloc(1, sizeof(double));
     }
-    input[0][0] = 0;
-    input[0][1] = 0;
-    input[1][0] = 0;
-    input[1][1] = 1;
-    input[2][0] = 1;
-    input[2][1] = 0;
-    input[3][0] = 1;
-    input[3][1] = 1;
-    output[0][0] = 0;
-    output[1][0] = 1;
-    output[2][0] = 1;
-    output[3][0] = 0;
 
-    mlp->backPropagation(input, output, 4, 0.1, 0.01);
+    mlp->backPropagation(input, output, 4, 0.1, 0.07);
 
     cout << "\n\n\nInitiating executions:\n";
 
