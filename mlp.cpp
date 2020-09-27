@@ -16,7 +16,7 @@ double **listToPatternMatrix(list<double *> listToConvert, int rowCount, int col
 {
     list<double *>::iterator it;
     int i, j;
-    double **pattern = (double **)calloc(rowCount, sizeof(double **));
+    double **pattern = (double **)calloc(rowCount, sizeof(double *));
     for (i = 0, it = listToConvert.begin(); i < rowCount; i++, it++)
     {
         pattern[i] = (double *)calloc(columnCount + 1, sizeof(double));
@@ -65,20 +65,19 @@ double **readPatternFile(int inputLength)
 double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMatrix, int columnCountMatrix, int rowCountVector)
 {
     double *result;
-    result = (double *)calloc(rowCountMatrix, sizeof(double *));
+    result = (double *)calloc(rowCountMatrix, sizeof(double));
 
     if (columnCountMatrix == rowCountVector + 1)
     {
-        for (int i = 0; i < rowCountMatrix; i++)
+        for (int i = 0; i < rowCountMatrix; i++) 
         {
-            for (int j = 0; j < rowCountVector; j++)
+            for (int j = 0; j < rowCountVector; j++) 
             {
                 result[i] += matrix[i][j] * vec[j];
             }
-            result[i] += matrix[i][rowCountVector];
+            result[i] -= matrix[i][rowCountVector];
         }
     }
-
     return result;
 }
 
@@ -86,15 +85,14 @@ double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMat
 double *vectorMatrixMultiplication(double *vec, double **matrix, int columnCountVector, int rowCountMatrix, int columnCountMatrix)
 {
     double *result;
-    result = (double *)calloc(columnCountMatrix, sizeof(double *));
-
+    result = (double *)calloc(columnCountMatrix, sizeof(double));
     if (columnCountVector == rowCountMatrix)
     {
         for (int i = 0; i < columnCountMatrix; i++)
         {
             for (int j = 0; j < columnCountVector; j++)
             {
-                result[i] += vec[j] * matrix[i][j];
+                result[i] += vec[j] * matrix[j][i];
             }
         }
     }
@@ -115,7 +113,7 @@ double **vectorMultiplication(double *a, double *b, int lengthA, int lengthB)
         {
             result[i][j] += a[i] * b[j];
         }
-        result[i][lengthB] = a[i];
+        result[i][lengthB] = -a[i];
     }
     return result;
 }
@@ -238,11 +236,15 @@ public:
     {
         // Finds the net value (sum of weighted inputs) received by the neuron in the hidden layer
         double *netHiddenLayer = matrixVectorMultiplication(this->hiddenLayer, input, this->hiddenLayerLength, this->inputLength + 1, this->inputLength);
+        
         // Finds the values calculated by the hidden layer
         this->activation(netHiddenLayer, this->hiddenLayerLength);
 
+        // Output layer
+
         // Finds the net value (sum of weighted inputs) received by the neuron in the output layer
         double *netOutputLayer = matrixVectorMultiplication(this->outputLayer, netHiddenLayer, this->outputLayerLength, this->hiddenLayerLength + 1, this->hiddenLayerLength);
+        
         // Finds the values calculated by the hidden layer
         this->activation(netOutputLayer, this->outputLayerLength);
 
@@ -284,12 +286,15 @@ public:
 #pragma region Output layer manipulation
                 // Declares a vector for the calculated errors
                 errors = (double *)calloc(this->outputLayerLength, sizeof(double));
+                //cout << "Errors: [";
                 // Calculates the error for each value obtained
                 for (int i = 0; i < this->outputLayerLength; i++)
                 {
                     errors[i] = Yp[i] - results.fNetOutput[i];
                     squaredError += pow(errors[i], 2);
+                    //cout << errors[i] << " ";
                 }
+                //cout << "]\n";
 
                 // Finds the derivative of the line that represents the error
                 dNetOutput = dNet(results.fNetOutput, this->outputLayerLength);
@@ -304,14 +309,14 @@ public:
 #pragma endregion
 
 #pragma region Hidden layer manipulation
-                outputDerivative = vectorMatrixMultiplication(deltaOutput, this->outputLayer, this->outputLayerLength, this->hiddenLayerLength, this->outputLayerLength);
-               // cout << "multipliado\n";
+                outputDerivative = vectorMatrixMultiplication(deltaOutput, this->outputLayer, this->outputLayerLength, this->outputLayerLength , this->hiddenLayerLength);
+                
                 // Declares a vector for the calculated derivatives
                 deltaHidden = (double *)calloc(this->hiddenLayerLength, sizeof(double));
 
                 // Finds the derivative of the line that represents the error
                 dNetHidden = dNet(results.fNetHidden, this->hiddenLayerLength);
-
+               
                 // Calculates the derivative for each error stored
                 for (int i = 0; i < this->hiddenLayerLength; i++)
                 {
@@ -321,6 +326,7 @@ public:
 
 #pragma region Effective training
                 outputLayerCorrection = vectorMultiplication(deltaOutput, results.fNetHidden, this->outputLayerLength, this->hiddenLayerLength);
+    
                 for (int i = 0; i < this->outputLayerLength; i++)
                 {
                     for (int j = 0; j < this->hiddenLayerLength + 1; j++)
@@ -341,16 +347,8 @@ public:
             }
 
             squaredError /= datasetLength;
-
-
-
-            //cout << "Backpropagation Iteration number " << count << "\n";
             count++;
-            cout << squaredError << " /= " << datasetLength << '\n';
-
             //free all used memory
-            free(Xp);
-            free(Yp);
             free(errors);
             free(dNetOutput);
             free(deltaOutput);
@@ -358,6 +356,8 @@ public:
             free(deltaHidden);
             free(outputDerivative);
         }
+        
+        cout << "Number of epochs = " << count << endl;
     }
 
 #pragma endregion
@@ -372,9 +372,10 @@ int main()
     double **output = (double **)calloc(4, sizeof(double *));
     for (int i = 0; i < 4; i++)
     {
-        input[i] = (double *)calloc(2, sizeof(double));
+        input[i] = (double *)calloc(3, sizeof(double));
         output[i] = (double *)calloc(1, sizeof(double));
     }
+
     input[0][0] = 0;
     input[0][1] = 0;
     input[1][0] = 0;
@@ -388,9 +389,7 @@ int main()
     output[2][0] = 1;
     output[3][0] = 0;
 
-    mlp->backPropagation(input, output, 4, 0.1, 0.01);
-
-    cout << "\n\n\nInitiating executions:\n";
+    mlp->backPropagation(input, output, 4, 0.2, 1e-5);
 
     State state;
 
@@ -399,25 +398,25 @@ int main()
     Xp[1] = 0;
     state = mlp->forward(Xp);
 
-    cout << state.fNetOutput[0] << '\n';
+    cout << "0 XOR 0 = " << round(state.fNetOutput[0]) << '\n';
 
     Xp[0] = 0;
     Xp[1] = 1;
     state = mlp->forward(Xp);
 
-    cout << state.fNetOutput[0] << '\n';
+    cout << "0 XOR 1 = " << round(state.fNetOutput[0]) << '\n';
 
     Xp[0] = 1;
     Xp[1] = 0;
     state = mlp->forward(Xp);
 
-    cout << state.fNetOutput[0] << '\n';
+    cout << "1 XOR 0 = " << round(state.fNetOutput[0]) << '\n';
 
     Xp[0] = 1;
     Xp[1] = 1;
     state = mlp->forward(Xp);
 
-    cout << state.fNetOutput[0] << '\n';
+    cout << "1 XOR 1 = " << round(state.fNetOutput[0]) << '\n';
 
     return (0);
 }
