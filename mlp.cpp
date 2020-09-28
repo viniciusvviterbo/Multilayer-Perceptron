@@ -5,8 +5,6 @@
 #include <list>
 #include <time.h>
 
-#define PATTERN_FILE "pattern.in" //File name of the pattern to be learnt by the neural network
-
 using namespace std;
 
 //Miscelaneous usefull functions and procedures
@@ -208,7 +206,6 @@ public:
     // Trains the neural network based on the mistakes made
     void backPropagation(double **input, double **output, int datasetLength, double trainingRate, double threshold)
     {
-
         int count = 0;
         // Vectors used in the method
         double *Xp, *Yp, *errors, *dNetOutput, *deltaOutput, *dNetHidden, *deltaHidden, *outputDerivative;
@@ -218,7 +215,7 @@ public:
 
         double squaredError = 2 * threshold;
         // Executes the loop while the error acceptance is not satiated
-        while (squaredError > threshold)
+        while (squaredError > threshold && count < 1000000)
         {
             squaredError = 0;
 
@@ -294,14 +291,21 @@ public:
 
             squaredError /= datasetLength;
             count++;
-
+	
+	        cout << "squaredError = " << squaredError << endl << "Count = " << count << endl << endl;
             // Clear all used memory
-            free(errors);
+            /*free(errors);
             free(dNetOutput);
             free(deltaOutput);
             free(dNetHidden);
             free(deltaHidden);
-            free(outputDerivative);
+            free(outputDerivative);*/
+            delete errors;
+            delete dNetOutput;
+            delete deltaOutput;
+            delete dNetHidden;
+            delete deltaHidden;
+            delete outputDerivative;
         }
 
         cout << "Number of epochs = " << count << endl;
@@ -321,7 +325,7 @@ int main(int argc, char *argv[])
     // Alocates memory for the dataset reading
     double **input = (double **)calloc(datasetLength, sizeof(double *));
     double **output = (double **)calloc(datasetLength, sizeof(double *));
-    
+
     // Reads the dataset data
     for (int i = 0; i < datasetLength; i++)
     {
@@ -337,6 +341,7 @@ int main(int argc, char *argv[])
         {
             cin >> output[i][j];
         }
+        cout << endl;
     }
 
     // Declares the MLP network class
@@ -351,11 +356,11 @@ int main(int argc, char *argv[])
 
     double *Xp;
     
-    for(int i = 0; i < 3; i++)
+    for(int i = 0; i < datasetLength; i++)
     {
         Xp = input[i];
         state = mlp->forward(Xp);
-        cout << "Test " << i << ":" << endl;
+        cout << "Test " << (i+1) << ":" << endl;
         cout << "\tExpected: " << output[i][0] << endl;
         cout << "\tObtained: " << round(state.fNetOutput[0]) << '\n';
     }
