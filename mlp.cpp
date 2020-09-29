@@ -12,9 +12,7 @@ using namespace std;
 // Multiply a matrix by a vector and return the result
 double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMatrix, int columnCountMatrix, int rowCountVector)
 {
-    double *result;
-    result = (double *)calloc(rowCountMatrix, sizeof(double));
-
+    double *result =  (double*) calloc(rowCountMatrix, sizeof(double));
     if (columnCountMatrix == rowCountVector + 1)
     {
         for (int i = 0; i < rowCountMatrix; i++)
@@ -30,40 +28,58 @@ double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMat
 }
 
 // Multiply a vector by a matrix and return the result
-double *vectorMatrixMultiplication(double *vec, double **matrix, int columnCountVector, int rowCountMatrix, int columnCountMatrix)
+void vectorMatrixMultiplication(double *result, double *vec, double **matrix, int columnCountVector, int rowCountMatrix, int columnCountMatrix)
 {
-    double *result;
-    result = (double *)calloc(columnCountMatrix, sizeof(double));
     if (columnCountVector == rowCountMatrix)
     {
         for (int i = 0; i < columnCountMatrix; i++)
         {
+            result[i] = 0;
             for (int j = 0; j < columnCountVector; j++)
             {
                 result[i] += vec[j] * matrix[j][i];
             }
         }
     }
-
-    return result;
 }
 
-// Multiply a vector by a vector and return the result which is a (lenghtA x lengthB) matrix
-double **vectorMultiplication(double *a, double *b, int lengthA, int lengthB)
+// Multiply a vector by a vector and return the result which is a (lenghtA x lengthB+1) matrix
+void vectorMultiplication(double **result, double *a, double *b, int lengthA, int lengthB)
 {
-    double **result;
-    result = (double **)calloc(lengthA, sizeof(double *));
-
     for (int i = 0; i < lengthA; i++)
     {
-        result[i] = (double *)calloc(lengthB + 1, sizeof(double));
         for (int j = 0; j < lengthB; j++)
         {
-            result[i][j] += a[i] * b[j];
+            result[i][j] = a[i] * b[j];
         }
         result[i][lengthB] = -a[i];
     }
-    return result;
+}
+
+//prints a vector
+void printVector(double *vector, int n, const char *message)
+{
+    cout << message << ": ";
+    for(int i = 0; i < n; i++)
+    {
+        cout << vector[i] << " ";
+    }
+    cout << endl;
+}
+
+//prints a matrix
+void printMatrix(double **matrix, int nRow, int nCol, const char *message)
+{
+    cout << message << ":\n";
+    for(int i = 0; i < nRow; i++)
+    {
+        for(int j = 0; j < nCol; j++)
+        {
+            cout << matrix[i][j] << " ";
+        }
+        cout << endl;
+    }
+    cout << endl;
 }
 #pragma endregion
 
@@ -167,34 +183,41 @@ public:
         }
     }
 
-    // Calculates the derivatives of the activated values
-    double *dNet(double *f_net, int f_netLength)
+    // Calculates the derivatives of the activated values and places the result in df_dnet
+    void dNet(double *df_dnet, double *f_net, int f_netLength)
     {
-        double *df_dnet = (double *)calloc(f_netLength, sizeof(double));
         for (int i = 0; i < f_netLength; i++)
         {
             df_dnet[i] = (f_net[i] * (1 - f_net[i]));
         }
-        return df_dnet;
     }
 
     // Receives one input from the dataset and obtains a response from the network
     State forward(double *input)
     {
+        double *netHiddenLayer, *netOutputLayer;
         // Finds the net value (sum of weighted inputs) received by the neuron in the hidden layer
-        double *netHiddenLayer = matrixVectorMultiplication(this->hiddenLayer, input, this->hiddenLayerLength, this->inputLength + 1, this->inputLength);
+        netHiddenLayer = matrixVectorMultiplication(this->hiddenLayer, input, this->hiddenLayerLength, this->inputLength + 1, this->inputLength);
 
+        //printVector(netHiddenLayer, this->hiddenLayerLength, "netH");
+        
         // Finds the values calculated by the hidden layer
         this->activation(netHiddenLayer, this->hiddenLayerLength);
 
+        //printVector(netHiddenLayer, this->hiddenLayerLength, "fNetH");
+        
         // Output layer
 
         // Finds the net value (sum of weighted inputs) received by the neuron in the output layer
-        double *netOutputLayer = matrixVectorMultiplication(this->outputLayer, netHiddenLayer, this->outputLayerLength, this->hiddenLayerLength + 1, this->hiddenLayerLength);
+        netOutputLayer = matrixVectorMultiplication(this->outputLayer, netHiddenLayer, this->outputLayerLength, this->hiddenLayerLength + 1, this->hiddenLayerLength);
 
+        //printVector(netOutputLayer, this->outputLayerLength, "netO");
+        
         // Finds the values calculated by the hidden layer
         this->activation(netOutputLayer, this->outputLayerLength);
 
+        //printVector(netOutputLayer, this->outputLayerLength, "fNetO");
+        
         // Declares and instantiates the current state of the network
         State state;
         state.fNetHidden = netHiddenLayer;
@@ -210,28 +233,63 @@ public:
         // Vectors used in the method
         double *Xp, *Yp, *errors, *dNetOutput, *deltaOutput, *dNetHidden, *deltaHidden, *outputDerivative;
         // Matrices used in the method
-        double **outputLayerCorrection, **hiddenLayerCorrection;
+        //double /**outputLayerCorrection,*/ **hiddenLayerCorrection;
         State results;
+
+        //Allocates memory for the arrays
+        // Declares a vector for the calculated errors
+        errors = (double *)calloc(this->outputLayerLength, sizeof(double));
+        // Declares the vector for the line derivative that represents the error for the output layer
+        dNetOutput = (double *)calloc(this->outputLayerLength, sizeof(double));
+        // Declares a vector for the calculated derivatives
+        deltaOutput = (double *)calloc(this->outputLayerLength, sizeof(double));
+        outputDerivative = (double *)calloc(this->hiddenLayerLength, sizeof(double));
+
+        // Declares the vector for the line derivative that represents the error for the hidden layer
+        dNetHidden = (double *)calloc(this->hiddenLayerLength, sizeof(double));
+        // Declares a vector for the calculated derivatives
+        deltaHidden = (double *)calloc(this->hiddenLayerLength, sizeof(double));
+
+        /*hiddenLayerCorrection = (double **)calloc(this->hiddenLayerLength, sizeof(double *));
+        for (int i = 0; i < this->hiddenLayerLength; i++)
+        {
+            hiddenLayerCorrection[i] = (double *)calloc(this->inputLength + 1, sizeof(double));
+        }*/
+
+        /*outputLayerCorrection = (double **)calloc(this->outputLayerLength, sizeof(double *));
+        for (int i = 0; i < this->outputLayerLength; i++)
+        {
+            outputLayerCorrection[i] = (double *)calloc(this->hiddenLayerLength + 1, sizeof(double));
+        }*/
 
         double squaredError = 2 * threshold;
         // Executes the loop while the error acceptance is not satiated
-        while (squaredError > threshold && count < 1000000)
+        while (squaredError > threshold && count < 150000)
         {
             squaredError = 0;
 
             for (int p = 0; p < datasetLength; p++)
             {
+                //printMatrix(outputLayer, this->outputLayerLength, this->hiddenLayerLength + 1, "Output Layer");
+
+                //printMatrix(hiddenLayer, this->hiddenLayerLength, this->inputLength + 1, "Hidden Layer");
                 // Extracts input pattern
                 Xp = input[p];
                 // Extracts output pattern
                 Yp = output[p];
 
+                //printVector(Xp, this->inputLength, "Xp");
+                //printVector(Yp, this->outputLayerLength, "Yp");
+
                 // Obtains the results given by the network
                 results = this->forward(Xp);
 
+                //printVector(results.fNetHidden, this->hiddenLayerLength, "Results fNetH");
+
+                //printVector(results.fNetOutput, this->outputLayerLength, "Results fNetO");
+
 #pragma region Output layer manipulation
-                // Declares a vector for the calculated errors
-                errors = (double *)calloc(this->outputLayerLength, sizeof(double));
+                
                 // Calculates the error for each value obtained
                 for (int i = 0; i < this->outputLayerLength; i++)
                 {
@@ -239,52 +297,66 @@ public:
                     squaredError += pow(errors[i], 2);
                 }
 
-                // Finds the derivative of the line that represents the error
-                dNetOutput = dNet(results.fNetOutput, this->outputLayerLength);
+                //printVector(errors, this->outputLayerLength, "Errors");
 
-                // Declares a vector for the calculated derivatives
-                deltaOutput = (double *)calloc(this->outputLayerLength, sizeof(double));
+                // Finds the derivative of the line that represents the error
+                dNet(dNetOutput, results.fNetOutput, this->outputLayerLength);
+
+                //printVector(dNetOutput, this->outputLayerLength, "dNetO");
+                
                 // Calculates the derivative for each error stored
                 for (int i = 0; i < this->outputLayerLength; i++)
                 {
                     deltaOutput[i] = errors[i] * dNetOutput[i];
                 }
+
+                //printVector(deltaOutput, this->outputLayerLength, "deltaOutput");
 #pragma endregion
 
 #pragma region Hidden layer manipulation
-                outputDerivative = vectorMatrixMultiplication(deltaOutput, this->outputLayer, this->outputLayerLength, this->outputLayerLength, this->hiddenLayerLength);
+                vectorMatrixMultiplication(outputDerivative, deltaOutput, this->outputLayer, this->outputLayerLength, this->outputLayerLength, this->hiddenLayerLength);
 
-                // Declares a vector for the calculated derivatives
-                deltaHidden = (double *)calloc(this->hiddenLayerLength, sizeof(double));
-
+                //printVector(outputDerivative, this->hiddenLayerLength, "outDeriv");
+                
                 // Finds the derivative of the line that represents the error
-                dNetHidden = dNet(results.fNetHidden, this->hiddenLayerLength);
+                dNet(dNetHidden, results.fNetHidden, this->hiddenLayerLength);
 
+                //printVector(dNetHidden, this->hiddenLayerLength, "dNetH");
+                
                 // Calculates the derivative for each error stored
                 for (int i = 0; i < this->hiddenLayerLength; i++)
                 {
                     deltaHidden[i] = outputDerivative[i] * dNetHidden[i];
                 }
+
+                //printVector(deltaHidden, this->hiddenLayerLength, "deltaH");
 #pragma endregion
 
 #pragma region Effective training
-                outputLayerCorrection = vectorMultiplication(deltaOutput, results.fNetHidden, this->outputLayerLength, this->hiddenLayerLength);
+                //vectorMultiplication(outputLayerCorrection, deltaOutput, results.fNetHidden, this->outputLayerLength, this->hiddenLayerLength);
 
+                //printMatrix(outputLayerCorrection, this->outputLayerLength, this->hiddenLayerLength + 1, "correctionO");
+                
                 for (int i = 0; i < this->outputLayerLength; i++)
                 {
-                    for (int j = 0; j < this->hiddenLayerLength + 1; j++)
+                    for (int j = 0; j < this->hiddenLayerLength; j++)
                     {
-                        this->outputLayer[i][j] += trainingRate * outputLayerCorrection[i][j];
+                        this->outputLayer[i][j] += trainingRate * deltaOutput[i] * results.fNetHidden[j]; /*outputLayerCorrection[i][j];*/
                     }
+                    this->outputLayer[i][hiddenLayerLength] -= trainingRate * deltaOutput[i];
                 }
 
-                hiddenLayerCorrection = vectorMultiplication(deltaHidden, Xp, this->hiddenLayerLength, this->inputLength);
+                //vectorMultiplication(hiddenLayerCorrection, deltaHidden, Xp, this->hiddenLayerLength, this->inputLength);
+                
+                //printMatrix(hiddenLayerCorrection, this->hiddenLayerLength, this->inputLength + 1, "correctionH");
+                
                 for (int i = 0; i < this->hiddenLayerLength; i++)
                 {
-                    for (int j = 0; j < this->inputLength + 1; j++)
+                    for (int j = 0; j < this->inputLength; j++)
                     {
-                        this->hiddenLayer[i][j] += trainingRate * hiddenLayerCorrection[i][j];
+                        this->hiddenLayer[i][j] += trainingRate * deltaHidden[i] * Xp[j];
                     }
+                    this->hiddenLayer[i][inputLength] -= trainingRate * deltaHidden[i];
                 }
 #pragma endregion
             }
@@ -292,23 +364,20 @@ public:
             squaredError /= datasetLength;
             count++;
 	
-	        cout << "squaredError = " << squaredError << endl << "Count = " << count << endl << endl;
-            // Clear all used memory
-            /*free(errors);
-            free(dNetOutput);
-            free(deltaOutput);
-            free(dNetHidden);
-            free(deltaHidden);
-            free(outputDerivative);*/
-            delete errors;
-            delete dNetOutput;
-            delete deltaOutput;
-            delete dNetHidden;
-            delete deltaHidden;
-            delete outputDerivative;
+	        //cout << "squaredError = " << squaredError << endl << "Count = " << count << endl << endl;
         }
+        // Clear all used memory
+        delete errors;
+        delete deltaOutput;
+        delete deltaHidden;
+        delete dNetOutput;
+        delete dNetHidden;
+        delete outputDerivative;
+        //delete hiddenLayerCorrection;
+        //delete outputLayerCorrection;
+        
 
-        cout << "Number of epochs = " << count << endl;
+        //cout << "Number of epochs = " << count << endl;
     }
 
 #pragma endregion
@@ -341,14 +410,13 @@ int main(int argc, char *argv[])
         {
             cin >> output[i][j];
         }
-        cout << endl;
     }
 
     // Declares the MLP network class
     MLP *mlp = new MLP(inputLength, hiddenLength, outputLength);
 
     // Executes the neural network training
-    mlp->backPropagation(input, output, datasetLength, trainingRate, threshold);
+    mlp->backPropagation(input, output, datasetLength/2, trainingRate, threshold);
 
 
     #pragma region Testing
@@ -356,13 +424,14 @@ int main(int argc, char *argv[])
 
     double *Xp;
     
-    for(int i = 0; i < datasetLength; i++)
+    for(int i = datasetLength/2; i < datasetLength; i++)
     {
         Xp = input[i];
         state = mlp->forward(Xp);
-        cout << "Test " << (i+1) << ":" << endl;
-        cout << "\tExpected: " << output[i][0] << endl;
-        cout << "\tObtained: " << round(state.fNetOutput[0]) << '\n';
+        //cout << "Test " << (i+1) << ":" << endl;
+        //cout << "\tExpected: " << output[i][0] << endl;
+        //cout << "\tObtained: " << state.fNetOutput[0] << '\n';
+        cout << round(state.fNetOutput[0]) << '\n';
     }
     #pragma endregion
 
