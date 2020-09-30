@@ -13,15 +13,18 @@ using namespace std;
 double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMatrix, int columnCountMatrix, int rowCountVector)
 {
     double *result =  (double*) calloc(rowCountMatrix, sizeof(double));
+    double sum;
     if (columnCountMatrix == rowCountVector + 1)
     {
         for (int i = 0; i < rowCountMatrix; i++)
         {
+            sum = 0;
+            #pragma omp parallel for reduction(+: sum)
             for (int j = 0; j < rowCountVector; j++)
             {
-                result[i] += matrix[i][j] * vec[j];
+                sum += matrix[i][j] * vec[j];
             }
-            result[i] -= matrix[i][rowCountVector];
+            result[i] = sum - matrix[i][rowCountVector];
         }
     }
     return result;
@@ -30,15 +33,18 @@ double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMat
 // Multiply a vector by a matrix and return the result
 void vectorMatrixMultiplication(double *result, double *vec, double **matrix, int columnCountVector, int rowCountMatrix, int columnCountMatrix)
 {
+    double sum;
     if (columnCountVector == rowCountMatrix)
     {
         for (int i = 0; i < columnCountMatrix; i++)
         {
-            result[i] = 0;
+            sum = 0;
+            #pragma omp parallel for reduction(+: sum)
             for (int j = 0; j < columnCountVector; j++)
             {
-                result[i] += vec[j] * matrix[j][i];
+                sum += vec[j] * matrix[j][i];
             }
+            result[i] = sum;
         }
     }
 }
@@ -308,11 +314,12 @@ public:
 #pragma endregion
 
 #pragma region Effective training
+
                 for (int i = 0; i < this->outputLayerLength; i++)
                 {
                     for (int j = 0; j < this->hiddenLayerLength; j++)
                     {
-                        this->outputLayer[i][j] += trainingRate * deltaOutput[i] * results.fNetHidden[j]; /*outputLayerCorrection[i][j];*/
+                        this->outputLayer[i][j] += trainingRate * deltaOutput[i] * results.fNetHidden[j];
                     }
                     this->outputLayer[i][hiddenLayerLength] -= trainingRate * deltaOutput[i];
                 }
