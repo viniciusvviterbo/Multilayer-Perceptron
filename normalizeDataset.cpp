@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 using namespace std;
 
@@ -71,17 +72,36 @@ void normalizeDataset(double **dataset, int nRow, int nCol)
     }
 }
 
+//Generates a completele ramdomized and normalized dataset
+double **randomDataset(int datasetLength, int inputLength, int outputLength)
+{
+    double **dataset = (double**) calloc(datasetLength, sizeof(double));
+    srand(time(NULL));
+    for(int i = 0; i < datasetLength; i++) 
+    {
+        for(int j = 0; j < inputLength; j++)
+        {
+            dataset[i][j] = ((double)rand() / (RAND_MAX));
+        }
+        for(int j = inputLength; j < outputLength; j++)
+        {
+            dataset[i][j] = round(((double)rand() / (RAND_MAX)));
+        }
+    }
+}
+
+
 int main()
 {
 
     // Declares and reads the main values of the dataset input
     int datasetLength, inputLength, outputLength;
 
-    cin >> datasetLength >> inputLength >> outputLength;
+    //cin >> datasetLength >> inputLength >> outputLength;
 
-    int nCol = inputLength + outputLength;
+    //int nCol = inputLength + outputLength;
     // Alocates memory for the dataset reading
-    double **dataset = (double **)calloc(datasetLength, sizeof(double *));
+    /*double **dataset = (double **)calloc(datasetLength, sizeof(double *));
 
     // Reads the dataset data
     for (int i = 0; i < datasetLength; i++)
@@ -92,15 +112,22 @@ int main()
         {
             cin >> dataset[i][j];
         }
-    }
+    }*/
+    
+    datasetLength = 700;
+    inputLength = 128;
+    outputLength = 1;
+
+    double **dataset = randomDataset(datasetLength, inputLength, outputLength);
 
     //Function that normalizes the dataset, placing every value between 0 and 1
     //for a better comparison, making it better for the multilayer perceptron neural
     //network converge the error to the given threshold
-    normalizeDataset(dataset, datasetLength, nCol);
+    //normalizeDataset(dataset, datasetLength, inputLength);
 
     cout << datasetLength << " " << inputLength << " " << outputLength << endl << endl;
 
+    int nCol = inputLength + outputLength;
     //printing back all the normalized dataset (the idea is to redirect the standard output to a file)
     for (int i = 0; i < datasetLength; i++)
     {
