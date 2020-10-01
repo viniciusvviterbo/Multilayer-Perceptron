@@ -12,8 +12,9 @@ In this repository there is a parallel implementation of an MLP
 
 # The MLP Architecture
 
-(MLP architecture explanation to be done)
+An artificial neuron receives inputs signals and weights . The weights reflects the influence of the input. The neuron has the ability to calculate the weighted sum of its inputs and then applies an activation function to obtain a signal that will be transmitted to the next neuron. 
 
+The MLP architecure can be divided in 4 steps. The first step is to attribute random values for the weights and the threshold. The second step is to calculate the values of the neurons in the hidden layer. The third step is to calculate the error in the neuron of the output layer and correct their weight and calculates the error of the neurons in the hidden layer and correct their weight. After this procedure it is possible to atualizate the weight of the neuron of the output layer and the neuron of the hidden layer. The last step is to propagate this 3 first procedures to train by doing a backpropagation.
 # The Dataset
 
   The owner of the Dataset is Nick Street and was created in 1995. It was created for diagnost breast cancer. Features are computed from a digital image of a fine needle aspirate(FNA) of a breast mass, that can describe the characteristics of the cell nuclei present in the image. The results were obtained using Multisuface Method-Tree(MST), a classification method which uses linear programming to construct a decision tree.
