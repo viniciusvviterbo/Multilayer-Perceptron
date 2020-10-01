@@ -16,7 +16,31 @@ In this repository there is a parallel implementation of an MLP
 
 # The Dataset
 
-(Dataset explanation to be done)
+  The owner of the Dataset is Nick Street and was created in 1995. It was created for diagnost breast cancer. Features are computed from a digital image of a fine needle aspirate(FNA) of a breast mass, that can describe the characteristics of the cell nuclei present in the image. The results were obtained using Multisuface Method-Tree(MST), a classification method which uses linear programming to construct a decision tree.
+  
+  It was used 569 instances with 32 attributes (  ID, diagnosis and 30 real input features): 
+  
+  1. ID -> to identify each person by a code
+  
+  2. diagnosis -> can be M (malignant) or B (benign)
+  
+  3. real valued features -> computed for each cell nucleus<br />
+      
+   The results predict field 2, diagnosis: B (benign), M (malignant). Sets are linearly separable using all 30 input features. Accomplish 97,5% accuracy and have also diagnosed 176 consecutive new pacients as of November 1995.
+   
+   Creators: 
+
+	Dr. William H. Wolberg, General Surgery Dept., University of
+	Wisconsin,  Clinical Sciences Center, Madison, WI 53792
+	wolberg@eagle.surgery.wisc.edu
+
+	W. Nick Street, Computer Sciences Dept., University of
+	Wisconsin, 1210 West Dayton St., Madison, WI 53706
+	street@cs.wisc.edu  608-262-6619
+
+	Olvi L. Mangasarian, Computer Sciences Dept., University of
+	Wisconsin, 1210 West Dayton St., Madison, WI 53706
+	olvi@cs.wisc.edu 
 
 # Usage
 
