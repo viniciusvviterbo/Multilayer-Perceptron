@@ -239,7 +239,7 @@ public:
 
         double squaredError = 2 * threshold;
         // Executes the loop while the error acceptance is not satiated
-        while (squaredError > threshold && count < 10000)
+        while (squaredError > threshold && count < 100)
         {
             squaredError = 0;
 
@@ -381,7 +381,7 @@ int main(int argc, char *argv[])
     MLP *mlp = new MLP(inputLength, hiddenLength, outputLength);
 
     // Executes the neural network training
-    mlp->backPropagation(input, output, datasetLength, trainingRate, threshold);
+    mlp->backPropagation(input, output, datasetLength/2, trainingRate, threshold);
 
 
     #pragma region Testing
@@ -391,18 +391,7 @@ int main(int argc, char *argv[])
 
     int errorCount = 0;
     
-    /*for(int i = datasetLength/2; i < datasetLength; i++)
-    {
-        Xp = input[i];
-        state = mlp->forward(Xp);
-        //cout << "Test " << (i+1) << ":" << endl;
-        //cout << "\tExpected: " << output[i][0] << endl;
-        //cout << "\tObtained: " << state.fNetOutput[0] << '\n';
-        if(output[i][0] != round(state.fNetOutput[0])) errorCount++;
-        //cout << round(state.fNetOutput[0]) << '\n';
-    }*/
-
-    for(int i = 0; i < datasetLength; i++)
+    for(int i = datasetLength/2; i < datasetLength; i++)
     {
         Xp = input[i];
         state = mlp->forward(Xp);
@@ -413,7 +402,18 @@ int main(int argc, char *argv[])
         //cout << round(state.fNetOutput[0]) << '\n';
     }
 
-    int nTests = datasetLength;
+    /*for(int i = 0; i < datasetLength; i++)
+    {
+        Xp = input[i];
+        state = mlp->forward(Xp);
+        //cout << "Test " << (i+1) << ":" << endl;
+        //cout << "\tExpected: " << output[i][0] << endl;
+        //cout << "\tObtained: " << state.fNetOutput[0] << '\n';
+        if(output[i][0] != round(state.fNetOutput[0])) errorCount++;
+        //cout << round(state.fNetOutput[0]) << '\n';
+    }*/
+
+    int nTests = datasetLength/2;
     cout << "Number of tests = " << nTests << endl;
     int nSucc = nTests - errorCount;
     cout << "Number of succesful answers = " << nSucc << endl;

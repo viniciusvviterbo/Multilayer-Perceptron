@@ -73,20 +73,24 @@ void normalizeDataset(double **dataset, int nRow, int nCol)
 }
 
 //Generates a completele ramdomized and normalized dataset
-double **randomDataset(int datasetLength, int inputLength, int outputLength)
+void randomDataset(int datasetLength, int inputLength, int outputLength)
 {
-    double **dataset = (double**) calloc(datasetLength, sizeof(double));
+    cout << datasetLength << " " << inputLength << " " << outputLength << endl << endl;
     srand(time(NULL));
+    double val;
     for(int i = 0; i < datasetLength; i++) 
     {
         for(int j = 0; j < inputLength; j++)
         {
-            dataset[i][j] = ((double)rand() / (RAND_MAX));
+            val = ((double)rand() / (RAND_MAX));
+            cout << val << " ";
         }
-        for(int j = inputLength; j < outputLength; j++)
+        for(int j = 0; j < outputLength; j++)
         {
-            dataset[i][j] = round(((double)rand() / (RAND_MAX)));
+            val = round(((double)rand() / (RAND_MAX)));
+            cout << val << " ";
         }
+        cout << endl;
     }
 }
 
@@ -118,25 +122,25 @@ int main()
     inputLength = 128;
     outputLength = 1;
 
-    double **dataset = randomDataset(datasetLength, inputLength, outputLength);
+    randomDataset(500, 60, 1500);
+    //randomDataset(4, 2, 1);
 
     //Function that normalizes the dataset, placing every value between 0 and 1
     //for a better comparison, making it better for the multilayer perceptron neural
     //network converge the error to the given threshold
     //normalizeDataset(dataset, datasetLength, inputLength);
 
-    cout << datasetLength << " " << inputLength << " " << outputLength << endl << endl;
-
-    int nCol = inputLength + outputLength;
+    //cout << datasetLength << " " << inputLength << " " << outputLength << endl << endl;
+    
     //printing back all the normalized dataset (the idea is to redirect the standard output to a file)
-    for (int i = 0; i < datasetLength; i++)
+    /*for (int i = 0; i < datasetLength; i++)
     {
-        for (int j = 0; j < nCol; j++)
+        for (int j = 0; j < 129; j++)
         {
             printf("%g ", dataset[i][j]);
         }
         cout << endl;
-    }
+    }*/
 
     return 0;
 }
