@@ -39,7 +39,7 @@ void vectorMatrixMultiplication(double *result, double *vec, double **matrix, in
         for (int i = 0; i < columnCountMatrix; i++)
         {
             sum = 0;
-            #pragma omp parallel for reduction(+: sum)
+            #pragma omp parallel for reduction(+: sum) num_threads(8)
             for (int j = 0; j < columnCountVector; j++)
             {
                 sum += vec[j] * matrix[j][i];
@@ -189,9 +189,20 @@ public:
     State forward(double *input)
     {
         double *netHiddenLayer, *netOutputLayer;
+        double sum;
         // Finds the net value (sum of weighted inputs) received by the neuron in the hidden layer
-        netHiddenLayer = matrixVectorMultiplication(this->hiddenLayer, input, this->hiddenLayerLength, this->inputLength + 1, this->inputLength);
-
+        netHiddenLayer =  (double*) calloc(this->hiddenLayerLength, sizeof(double));
+        for (int i = 0; i < this->hiddenLayerLength; i++)
+        {
+            sum = 0;
+            for (int j = 0; j < this->inputLength; j++)
+            {
+                sum += this->hiddenLayer[i][j] * input[j];
+            }
+            netHiddenLayer[i] = sum - this->hiddenLayer[i][inputLength];
+        }
+        
+        
         //printVector(netHiddenLayer, this->hiddenLayerLength, "netH");
         
         // Finds the values calculated by the hidden layer
@@ -202,7 +213,18 @@ public:
         // Output layer
 
         // Finds the net value (sum of weighted inputs) received by the neuron in the output layer
-        netOutputLayer = matrixVectorMultiplication(this->outputLayer, netHiddenLayer, this->outputLayerLength, this->hiddenLayerLength + 1, this->hiddenLayerLength);
+        netOutputLayer = (double*) calloc(this->outputLayerLength, sizeof(double));
+        for (int i = 0; i < this->outputLayerLength; i++)
+        {
+            sum = 0;
+            #pragma omp parallel for reduction(+: sum) num_threads(8)
+            for (int j = 0; j < this->hiddenLayerLength; j++)
+            {
+                sum += this->outputLayer[i][j] * netHiddenLayer[j];
+            }
+            netOutputLayer[i] = sum - this->outputLayer[i][this->hiddenLayerLength];
+        }
+
 
         //printVector(netOutputLayer, this->outputLayerLength, "netO");
         
@@ -245,8 +267,9 @@ public:
 
         double squaredError = 2 * threshold;
         // Executes the loop while the error acceptance is not satiated
-        while (squaredError > threshold && count < 10000)
+        while (squaredError > threshold && count < 3)
         {
+            cout << "Iteração " << (count + 1) << endl;
             squaredError = 0;
 
             for (int p = 0; p < datasetLength; p++)
@@ -388,7 +411,7 @@ int main(int argc, char *argv[])
     MLP *mlp = new MLP(inputLength, hiddenLength, outputLength);
 
     // Executes the neural network training
-    mlp->backPropagation(input, output, datasetLength, trainingRate, threshold);
+    mlp->backPropagation(input, output, datasetLength/2, trainingRate, threshold);
 
 
     #pragma region Testing
@@ -398,18 +421,7 @@ int main(int argc, char *argv[])
 
     int errorCount = 0;
     
-    /*for(int i = datasetLength/2; i < datasetLength; i++)
-    {
-        Xp = input[i];
-        state = mlp->forward(Xp);
-        //cout << "Test " << (i+1) << ":" << endl;
-        //cout << "\tExpected: " << output[i][0] << endl;
-        //cout << "\tObtained: " << state.fNetOutput[0] << '\n';
-        if(output[i][0] != round(state.fNetOutput[0])) errorCount++;
-        //cout << round(state.fNetOutput[0]) << '\n';
-    }*/
-
-    for(int i = 0; i < datasetLength; i++)
+    for(int i = datasetLength/2; i < datasetLength; i++)
     {
         Xp = input[i];
         state = mlp->forward(Xp);
@@ -420,7 +432,18 @@ int main(int argc, char *argv[])
         //cout << round(state.fNetOutput[0]) << '\n';
     }
 
-    int nTests = datasetLength;
+    /*for(int i = 0; i < datasetLength; i++)
+    {
+        Xp = input[i];
+        state = mlp->forward(Xp);
+        //cout << "Test " << (i+1) << ":" << endl;
+        //cout << "\tExpected: " << output[i][0] << endl;
+        //cout << "\tObtained: " << state.fNetOutput[0] << '\n';
+        if(output[i][0] != round(state.fNetOutput[0])) errorCount++;
+        //cout << round(state.fNetOutput[0]) << '\n';
+    }*/
+
+    int nTests = datasetLength/2;
     cout << "Number of tests = " << nTests << endl;
     int nSucc = nTests - errorCount;
     cout << "Number of succesful answers = " << nSucc << endl;
