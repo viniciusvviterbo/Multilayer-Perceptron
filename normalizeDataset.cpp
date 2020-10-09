@@ -12,7 +12,8 @@ using namespace std;
  */
 double normalizedValue(double x, double minValue, double maxValue)
 {
-    return (x - minValue) / (maxValue - minValue);
+    if ((maxValue - minValue) == 0) return 0;
+    else return (x - minValue) / (maxValue - minValue);
 }
 
 /*
@@ -101,46 +102,47 @@ int main()
     // Declares and reads the main values of the dataset input
     int datasetLength, inputLength, outputLength;
 
-    //cin >> datasetLength >> inputLength >> outputLength;
+    cin >> datasetLength >> inputLength >> outputLength;
 
-    //int nCol = inputLength + outputLength;
     // Alocates memory for the dataset reading
-    /*double **dataset = (double **)calloc(datasetLength, sizeof(double *));
+    double **dataset = (double **)calloc(datasetLength, sizeof(double *));
 
+    double ncol = inputLength + outputLength;
     // Reads the dataset data
     for (int i = 0; i < datasetLength; i++)
     {
-        dataset[i] = (double *)calloc(nCol, sizeof(double));
+        dataset[i] = (double *)calloc(ncol, sizeof(double));
 
-        for (int j = 0; j < nCol; j++)
+        for (int j = 0; j < ncol; j++)
         {
             cin >> dataset[i][j];
         }
-    }*/
+    }
     
-    datasetLength = 700;
+    /*datasetLength = 700;
     inputLength = 128;
     outputLength = 1;
 
-    randomDataset(500, 60, 1500);
+    randomDataset(700, 60, 6);
     //randomDataset(4, 2, 1);
+    */
 
     //Function that normalizes the dataset, placing every value between 0 and 1
     //for a better comparison, making it better for the multilayer perceptron neural
     //network converge the error to the given threshold
-    //normalizeDataset(dataset, datasetLength, inputLength);
+    normalizeDataset(dataset, datasetLength, ncol);
 
-    //cout << datasetLength << " " << inputLength << " " << outputLength << endl << endl;
+    cout << datasetLength << " " << inputLength << " " << outputLength << endl << endl;
     
     //printing back all the normalized dataset (the idea is to redirect the standard output to a file)
-    /*for (int i = 0; i < datasetLength; i++)
+    for (int i = 0; i < datasetLength; i++)
     {
-        for (int j = 0; j < 129; j++)
+        for (int j = 0; j < ncol; j++)
         {
             printf("%g ", dataset[i][j]);
         }
         cout << endl;
-    }*/
+    }
 
     return 0;
 }

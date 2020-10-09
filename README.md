@@ -6,13 +6,42 @@
 
 *Leia esse README em [`português`](https://github.com/viniciusvviterbo/Multilayer-Perceptron/blob/master/README.pt.md).*
 
-A multilayer perceptron (MLP) consists of an **Artificial Neural Network** with at least three layers of nodes: an input layer, a hidden layer and an output layer. Except for the input nodes, each node is a neuron that uses a nonlinear activation function. MLP utilizes a supervised learning technique called backpropagation for training. Its multiple layers and non-linear activation distinguish MLP from a linear perceptron. It can distinguish data that is not linearly separable.
+A multilayer perceptron (MLP) consists of an artificial neural network with at least three layers of nodes: an input layer, a hidden layer and an output layer. Except for the input nodes, each node is a neuron that uses a nonlinear activation function. MLP utilizes a supervised learning technique called backpropagation for training. Its multiple layers and non-linear activation distinguish MLP from a linear perceptron. It can distinguish data that is not linearly separable.
 
-In this repository there is a parallel implementation of an MLP that recognizes characters regardless of the font it is written in.
+In this repository there is a parallel implementation of an MLP
 
+# The MLP Architecture
+
+An artificial neuron receives inputs signals and weights . The weights reflects the influence of the input. The neuron has the ability to calculate the weighted sum of its inputs and then applies an activation function to obtain a signal that will be transmitted to the next neuron. 
+
+The MLP architecure can be divided in 4 steps. The first step is to attribute random values for the weights and the threshold. The second step is to calculate the values of the neurons in the hidden layer. The third step is to calculate the error in the neuron of the output layer and correct their weight and calculates the error of the neurons in the hidden layer and correct their weight. After this procedure it is possible to atualizate the weight of the neuron of the output layer and the neuron of the hidden layer. The last step is to propagate this 3 first procedures to train by doing a backpropagation.
 # The Dataset
 
-The original dataset consists of images from 153 character fonts obtained from [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Character+Font+Images). Some fonts were scanned from a variety of devices: hand scanners, desktop scanners or cameras. Other fonts were computer generated.
+  The owner of the Dataset is Nick Street and was created in 1995. It was created for diagnost breast cancer. Features are computed from a digital image of a fine needle aspirate(FNA) of a breast mass, that can describe the characteristics of the cell nuclei present in the image. The results were obtained using Multisuface Method-Tree(MST), a classification method which uses linear programming to construct a decision tree.
+  
+  It was used 569 instances with 32 attributes (  ID, diagnosis and 30 real input features): 
+  
+  1. ID -> to identify each person by a code
+  
+  2. diagnosis -> can be M (malignant) or B (benign)
+  
+  3. real valued features -> computed for each cell nucleus<br />
+      
+   The results predict field 2, diagnosis: B (benign), M (malignant). Sets are linearly separable using all 30 input features. Accomplish 97,5% accuracy and have also diagnosed 176 consecutive new pacients as of November 1995.
+   
+   Creators: 
+
+	Dr. William H. Wolberg, General Surgery Dept., University of
+	Wisconsin,  Clinical Sciences Center, Madison, WI 53792
+	wolberg@eagle.surgery.wisc.edu
+
+	W. Nick Street, Computer Sciences Dept., University of
+	Wisconsin, 1210 West Dayton St., Madison, WI 53706
+	street@cs.wisc.edu  608-262-6619
+
+	Olvi L. Mangasarian, Computer Sciences Dept., University of
+	Wisconsin, 1210 West Dayton St., Madison, WI 53706
+	olvi@cs.wisc.edu 
 
 # Usage
 
@@ -88,17 +117,11 @@ Example:
 
 # References
 
-Dua, D. and Graff, C. (2019). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA: University of California, School of Information and Computer Science.
-
-Análise do Desempenho de uma Implementação Paralela da Rede Neural Perceptron Multicamadas Utilizando Variável Compartilhada - by GÓES, Luís F. W. et al, PUC Minas 
-
-[Introdução a Redes Neurais Multicamadas](https://www.youtube.com/watch?v=fRz57JSpl80) - by [Prof. Fagner Christian Paes](http://lattes.cnpq.br/3446751413682046)
-
-[O que é a Multilayer Perceptron](https://www.youtube.com/watch?v=q3noPM9gcd8&list=PLKWX1jIoUZaWY_4zxjLXnIMU1Suyaa4VX&index=16) - from [ML4U](https://www.youtube.com/c/ML4U_Mello/)
-
 [Fabrício Goés Youtube Channel](https://www.youtube.com/channel/UCgeFcHndjZVth6HRg3cFkng) - by [Dr. Luis Goés](http://lattes.cnpq.br/7401444661491250)
 
 [Eitas Tutoriais](http://www.eitas.com.br/tutoriais/12) - by [Espaço de Inovação Tecnológica Aplicada e Social - PUC Minas](http://www.eitas.com.br/)
+
+[Breast Cancer Wisconsin (Diagnostic) Data Set](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29) - from [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php)
 
 [Koliko](http://www.fontslots.com/koliko-font/) - by [Alex Frukta](https://www.behance.net/MRfrukta) & [Vladimir Tomin](https://www.behance.net/myaka)
 

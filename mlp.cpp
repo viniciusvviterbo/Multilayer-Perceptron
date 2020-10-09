@@ -239,12 +239,13 @@ public:
 
         double squaredError = 2 * threshold;
         // Executes the loop while the error acceptance is not satiated
-        while (squaredError > threshold && count < 100)
+        while (squaredError > threshold && count < 10)
         {
             squaredError = 0;
 
             for (int p = 0; p < datasetLength; p++)
             {
+                //cout << "Item " << (p+1) << endl;
                 //printMatrix(outputLayer, this->outputLayerLength, this->hiddenLayerLength + 1, "Output Layer");
 
                 //printMatrix(hiddenLayer, this->hiddenLayerLength, this->inputLength + 1, "Hidden Layer");
@@ -331,7 +332,7 @@ public:
             squaredError /= datasetLength;
             count++;
 	
-	        //cout << "squaredError = " << squaredError << endl << "Count = " << count << endl << endl;
+	        cout << "squaredError = " << squaredError << endl << "Count = " << count << endl << endl;
         }
         // Clear all used memory
         delete errors;
@@ -381,7 +382,7 @@ int main(int argc, char *argv[])
     MLP *mlp = new MLP(inputLength, hiddenLength, outputLength);
 
     // Executes the neural network training
-    mlp->backPropagation(input, output, datasetLength/2, trainingRate, threshold);
+    mlp->backPropagation(input, output, datasetLength/10, trainingRate, threshold);
 
 
     #pragma region Testing
@@ -391,7 +392,7 @@ int main(int argc, char *argv[])
 
     int errorCount = 0;
     
-    for(int i = datasetLength/2; i < datasetLength; i++)
+    for(int i = datasetLength/10; i < datasetLength/5; i++)
     {
         Xp = input[i];
         state = mlp->forward(Xp);
