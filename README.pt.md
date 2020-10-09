@@ -6,17 +6,13 @@
 
 *Read this README in [`english`](https://github.com/viniciusvviterbo/Multilayer-Perceptron/blob/master/README.md)*
 
-A multilayer perceptron (MLP) consists of an artificial neural network with at least three layers of nodes: an input layer, a hidden layer and an output layer. Except for the input nodes, each node is a neuron that uses a nonlinear activation function. MLP utilizes a supervised learning technique called backpropagation for training. Its multiple layers and non-linear activation distinguish MLP from a linear perceptron. It can distinguish data that is not linearly separable.
+Um perceptron multicamadas (MLP) consiste em uma **Rede Neural Artificial** com pelo menos três camadas de nós: uma camada de entrada, uma camada escondida e uma camada de saída. Exceto pelos nós de entrada, cada nó é um neuron que usa uma função de ativação não linear. MLP utiliza uma técnica de aprendizado supervisionado chamado backpropagation para treinamento. Suas múltiplas camadas e ativação não-linear distingue a MLP de um perceptron linear. A rede pode distinguir dados que não são linearmente separáveis.
 
-In this repository there is a parallel implementation of an MLP
-
-# A Arquitetura MLP
-
-(Explicação da arquitetura MLP precisa set feita)
+Nesse repositório há uma implementação paralela de uma MLP que reconhece caracteres independente da fonte em que foram escritos.
 
 # O Dataset
 
-(Explicação do Dataset precisa set feita)
+O dataset original consiste de imagens de 153 fontes de caracteres obtidas do [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Character+Font+Images). Algumas fontes foram escaneadas por vários dispositivos: scanners de mão, desktop scanners ou câmeras. Outras fontes foram geradas por computador.
 
 # Uso
 
@@ -39,7 +35,7 @@ Nesse projeto optamos por descrever as principais características na primeira l
 [ENTRADA 1] [ENTRADA 2] ... [ENTRADA N] [SAÍDA 1] [SAÍDA 2] ... [SAÍDA N]
 ```
 
-Para testar o código, nesse repositório está incluso o dataset para a porta lógica XOR ([pattern_logic-port.in](https://github.com/viniciusvviterbo/Multilayer-Perceptron/blob/master/pattern_logic-port.in)), e ele pode ser usado para melhor entender a formatação necessária.
+Para testar o código, nesse repositório está incluso o dataset reduzido ([sampleNormalizedFonts.in](https://github.com/viniciusvviterbo/Multilayer-Perceptron/blob/master/datasets/sampleNormalizedFonts.in)), e ele pode ser usado para melhor entender a formatação necessária.
 
 ### Normalizando o dataset
 
@@ -54,7 +50,7 @@ Exemplo:
 
 ```shell
 g++ ./normalizeDataset.cpp -o ./normalizeDataset
-./normalizeDataset.cpp < pattern_breast-cancer.in > normalized_pattern_breast-cancer.in
+./normalizeDataset.cpp < ./datasets/patternFonts.in > ./datasets/normalizedPatternFonts.in
 ```
 
 ### Compilando o código fonte
@@ -62,41 +58,54 @@ g++ ./normalizeDataset.cpp -o ./normalizeDataset
 Compile o código usando OpenMP
 
 ```shell
-g++ ./mlp.cpp -o ./mlp -fopenmp
+g++ mlp.cpp -o mlp -O3 -fopenmp -std=c++14
 ```
 
 ### Treinamento e Resultado
 
 Nesse código, nós dividimos o dataset informado pela metade. A primeira metade é usada apenas para treinamento, a segunda é usada para teste, desse modo a rede vê essa segunda parte como novo conteúdo e tenta obter o diagnóstico correto.
 
-Os resultados esperados e os obtidos pela MLP são impressos para comparação.
-
 ### Executando
 
 Para execução, o comando necessita alguns parâmetros:
 
 ```shell
-.mlp TAMANHO_CAMADA_ESCONDIDA TAXA_DE_APRENDIZADO LIMIAR < ARQUIVO_DE_PADRÕES
+.mlp TAMANHO_CAMADA_ESCONDIDA TAXA_DE_APRENDIZADO LIMIAR NÚMERO_DE_NÚCLEOS< ARQUIVO_DE_PADRÕES
 ```
 
 * TAMANHO_CAMADA_ESCONDIDA  se refere ao número de neurônios na camada escondida da rede;
 * TAXA_DE_APRENDIZADO se refere à taxa de aprendizado da rede, um número de ponto flutuante usado durante a fase de correção do backpropagation;
 * LIMIAR  se refere à maior taxa de erro aceita pela rede a fim de obter um resultado correto;
+* NÚMERO_DE_NÚCLEOS se refere ao número de núcleos da CPU que a rede pode utilizar;
 * ARQUIVO_DE_PADRÕES refers to the normalized pattern file
 
 Exemplo:
 
 ```shell
-.mlp 5 0.2 1e-5 < ./normalized_pattern_breast-cancer.in
+./mlp 1024 0.1 1e-3 4 < ./datasets/normalizedPatternFonts.in
 ```
+
+Como um meio mais prático de executar, incluímos nesse repositório um script shell para facilitar os testes e ver os resultados de múltiplas execuções para obter o tempo de execução médio.
+
+```shell
+./script.sh
+```
+
+O script compila o código como uma implementação sequencial e a executa 5 vezes, depois o compila novamente como uma implementação paralela e executa mais 5 vezes. Para isso, estamos usando o (já normalizado e formatado) dataset reduzido [sampleNormalizedFonts.in](https://github.com/viniciusvviterbo/Multilayer-Perceptron/blob/master/datasets/sampleNormalizedFonts.in).
 
 # Referências
 
-[Canal do Youtube de Fabrício Goés](https://www.youtube.com/channel/UCgeFcHndjZVth6HRg3cFkng) - por [Dr. Luis Goés](http://lattes.cnpq.br/7401444661491250)
+Dua, D. and Graff, C. (2019). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA: University of California, School of Information and Computer Science.
+
+Análise do Desempenho de uma Implementação Paralela da Rede Neural Perceptron Multicamadas Utilizando Variável Compartilhada - por GÓES, Luís F. W. et al, PUC Minas 
+
+[Introdução a Redes Neurais Multicamadas](https://www.youtube.com/watch?v=fRz57JSpl80) - por [Prof. Fagner Christian Paes](http://lattes.cnpq.br/3446751413682046)
+
+[O que é a Multilayer Perceptron](https://www.youtube.com/watch?v=q3noPM9gcd8&list=PLKWX1jIoUZaWY_4zxjLXnIMU1Suyaa4VX&index=16) - de [ML4U](https://www.youtube.com/c/ML4U_Mello/)
+
+[Fabrício Goés Youtube Channel](https://www.youtube.com/channel/UCgeFcHndjZVth6HRg3cFkng) - por [Dr. Luis Goés](http://lattes.cnpq.br/7401444661491250)
 
 [Eitas Tutoriais](http://www.eitas.com.br/tutoriais/12) - por [Espaço de Inovação Tecnológica Aplicada e Social - PUC Minas](http://www.eitas.com.br/)
-
-[Breast Cancer Wisconsin (Diagnostic) Data Set](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29) - de [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php)
 
 [Koliko](http://www.fontslots.com/koliko-font/) - por [Alex Frukta](https://www.behance.net/MRfrukta) & [Vladimir Tomin](https://www.behance.net/myaka)
 
