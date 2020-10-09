@@ -58,7 +58,7 @@ g++ ./normalizeDataset.cpp -o ./normalizeDataset
 Compile the source code using OpenMP
 
 ```shell
-g++ mlp.cpp -o mlp -O3 -std=c++14
+g++ mlp.cpp -o mlp -O3 -fopenmp -std=c++14
 ```
 
 ### Training and Result
