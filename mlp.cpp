@@ -220,7 +220,7 @@ public:
 
         double squaredError = 2 * threshold;
         // Executes the loop while the error acceptance is not satiated
-        while (squaredError > threshold && count < 70)
+        while (squaredError > threshold && count < 128)
         {
             squaredError = 0;
 
