@@ -9,12 +9,14 @@ using namespace std;
 
 //Miscelaneous usefull functions and procedures
 #pragma region Util
+
 // Multiply a matrix by a vector and return the result
-double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMatrix, int columnCountMatrix, int rowCountVector)
+double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMatrix, int columnCountMatrix, int rowCountVector, int num_threads)
 {
     double *result =  (double*) calloc(rowCountMatrix, sizeof(double));
     if (columnCountMatrix == rowCountVector + 1)
     {
+        #pragma omp parallel for num_threads(num_threads)
         for (int i = 0; i < rowCountMatrix; i++)
         {
             for (int j = 0; j < rowCountVector; j++)
@@ -28,46 +30,34 @@ double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMat
 }
 
 // Multiply a vector by a matrix and return the result
-void vectorMatrixMultiplication(double *result, double *vec, double **matrix, int columnCountVector, int rowCountMatrix, int columnCountMatrix)
+void vectorMatrixMultiplication(double *result, double *vec, double **matrix, int columnCountVector, int rowCountMatrix, int columnCountMatrix, int num_threads)
 {
+    double sum;
     if (columnCountVector == rowCountMatrix)
     {
         for (int i = 0; i < columnCountMatrix; i++)
         {
-            result[i] = 0;
+            sum = 0;
             for (int j = 0; j < columnCountVector; j++)
             {
-                result[i] += vec[j] * matrix[j][i];
+                sum += vec[j] * matrix[j][i];
             }
+            result[i] = sum;
         }
     }
 }
 
-//prints a vector
-void printVector(double *vector, int n, const char *message)
+//Function that compares two given vectors and returns true if all of their elements are the same
+bool equalVectors(double *a, double *b, int length)
 {
-    cout << message << ": ";
-    for(int i = 0; i < n; i++)
-    {
-        cout << vector[i] << " ";
-    }
-    cout << endl;
-}
-
-//prints a matrix
-void printMatrix(double **matrix, int nRow, int nCol, const char *message)
-{
-    cout << message << ":\n";
-    for(int i = 0; i < nRow; i++)
-    {
-        for(int j = 0; j < nCol; j++)
+        for(int i = 0; i < length; i++)
         {
-            cout << matrix[i][j] << " ";
+                if(a[i] != round(b[i])) return false;
         }
-        cout << endl;
-    }
-    cout << endl;
+        return true;
 }
+
+
 #pragma endregion
 
 // Representation of the values with a given input at each step in the forward motion
@@ -180,30 +170,22 @@ public:
     }
 
     // Receives one input from the dataset and obtains a response from the network
-    State forward(double *input)
+    State forward(double *input, int num_threads)
     {
         double *netHiddenLayer, *netOutputLayer;
         // Finds the net value (sum of weighted inputs) received by the neuron in the hidden layer
-        netHiddenLayer = matrixVectorMultiplication(this->hiddenLayer, input, this->hiddenLayerLength, this->inputLength + 1, this->inputLength);
-
-        //printVector(netHiddenLayer, this->hiddenLayerLength, "netH");
+        netHiddenLayer = matrixVectorMultiplication(this->hiddenLayer, input, this->hiddenLayerLength, this->inputLength + 1, this->inputLength, num_threads);
         
         // Finds the values calculated by the hidden layer
         this->activation(netHiddenLayer, this->hiddenLayerLength);
-
-        //printVector(netHiddenLayer, this->hiddenLayerLength, "fNetH");
         
         // Output layer
 
         // Finds the net value (sum of weighted inputs) received by the neuron in the output layer
-        netOutputLayer = matrixVectorMultiplication(this->outputLayer, netHiddenLayer, this->outputLayerLength, this->hiddenLayerLength + 1, this->hiddenLayerLength);
+        netOutputLayer = matrixVectorMultiplication(this->outputLayer, netHiddenLayer, this->outputLayerLength, this->hiddenLayerLength + 1, this->hiddenLayerLength, num_threads);
 
-        //printVector(netOutputLayer, this->outputLayerLength, "netO");
-        
         // Finds the values calculated by the hidden layer
         this->activation(netOutputLayer, this->outputLayerLength);
-
-        //printVector(netOutputLayer, this->outputLayerLength, "fNetO");
         
         // Declares and instantiates the current state of the network
         State state;
@@ -214,13 +196,12 @@ public:
     }
 
     // Trains the neural network based on the mistakes made
-    void backPropagation(double **input, double **output, int datasetLength, double trainingRate, double threshold)
+    void backPropagation(double **input, double **output, int datasetLength, double trainingRate, double threshold, int num_threads)
     {
         int count = 0;
         // Vectors used in the method
         double *Xp, *Yp, *errors, *dNetOutput, *deltaOutput, *dNetHidden, *deltaHidden, *outputDerivative;
         // Matrices used in the method
-        //double /**outputLayerCorrection,*/ **hiddenLayerCorrection;
         State results;
 
         //Allocates memory for the arrays
@@ -239,32 +220,21 @@ public:
 
         double squaredError = 2 * threshold;
         // Executes the loop while the error acceptance is not satiated
-        while (squaredError > threshold && count < 10)
+        while (squaredError > threshold && count < 70)
         {
             squaredError = 0;
 
             for (int p = 0; p < datasetLength; p++)
             {
-                //cout << "Item " << (p+1) << endl;
-                //printMatrix(outputLayer, this->outputLayerLength, this->hiddenLayerLength + 1, "Output Layer");
-
-                //printMatrix(hiddenLayer, this->hiddenLayerLength, this->inputLength + 1, "Hidden Layer");
                 // Extracts input pattern
                 Xp = input[p];
                 // Extracts output pattern
                 Yp = output[p];
 
-                //printVector(Xp, this->inputLength, "Xp");
-                //printVector(Yp, this->outputLayerLength, "Yp");
-
                 // Obtains the results given by the network
-                results = this->forward(Xp);
+                results = this->forward(Xp, num_threads);
 
-                //printVector(results.fNetHidden, this->hiddenLayerLength, "Results fNetH");
-
-                //printVector(results.fNetOutput, this->outputLayerLength, "Results fNetO");
-
-#pragma region Output layer manipulation
+                #pragma region Output layer manipulation
                 
                 // Calculates the error for each value obtained
                 for (int i = 0; i < this->outputLayerLength; i++)
@@ -273,51 +243,43 @@ public:
                     squaredError += pow(errors[i], 2);
                 }
 
-                //printVector(errors, this->outputLayerLength, "Errors");
-
                 // Finds the derivative of the line that represents the error
                 dNet(dNetOutput, results.fNetOutput, this->outputLayerLength);
-
-                //printVector(dNetOutput, this->outputLayerLength, "dNetO");
                 
                 // Calculates the derivative for each error stored
                 for (int i = 0; i < this->outputLayerLength; i++)
                 {
                     deltaOutput[i] = errors[i] * dNetOutput[i];
                 }
-
-                //printVector(deltaOutput, this->outputLayerLength, "deltaOutput");
 #pragma endregion
 
 #pragma region Hidden layer manipulation
-                vectorMatrixMultiplication(outputDerivative, deltaOutput, this->outputLayer, this->outputLayerLength, this->outputLayerLength, this->hiddenLayerLength);
+                vectorMatrixMultiplication(outputDerivative, deltaOutput, this->outputLayer, this->outputLayerLength, this->outputLayerLength, this->hiddenLayerLength, num_threads);
 
-                //printVector(outputDerivative, this->hiddenLayerLength, "outDeriv");
-                
                 // Finds the derivative of the line that represents the error
                 dNet(dNetHidden, results.fNetHidden, this->hiddenLayerLength);
 
-                //printVector(dNetHidden, this->hiddenLayerLength, "dNetH");
-                
                 // Calculates the derivative for each error stored
                 for (int i = 0; i < this->hiddenLayerLength; i++)
                 {
                     deltaHidden[i] = outputDerivative[i] * dNetHidden[i];
                 }
 
-                //printVector(deltaHidden, this->hiddenLayerLength, "deltaH");
-#pragma endregion
+                #pragma endregion
 
-#pragma region Effective training
+                #pragma region Effective training
+
+                //Training the output layer
                 for (int i = 0; i < this->outputLayerLength; i++)
                 {
                     for (int j = 0; j < this->hiddenLayerLength; j++)
                     {
-                        this->outputLayer[i][j] += trainingRate * deltaOutput[i] * results.fNetHidden[j]; /*outputLayerCorrection[i][j];*/
+                        this->outputLayer[i][j] += trainingRate * deltaOutput[i] * results.fNetHidden[j];
                     }
                     this->outputLayer[i][hiddenLayerLength] -= trainingRate * deltaOutput[i];
                 }
 
+                //Training the hidden layer
                 for (int i = 0; i < this->hiddenLayerLength; i++)
                 {
                     for (int j = 0; j < this->inputLength; j++)
@@ -326,13 +288,11 @@ public:
                     }
                     this->hiddenLayer[i][inputLength] -= trainingRate * deltaHidden[i];
                 }
-#pragma endregion
+                #pragma endregion
             }
 
             squaredError /= datasetLength;
             count++;
-	
-	        cout << "squaredError = " << squaredError << endl << "Count = " << count << endl << endl;
         }
         // Clear all used memory
         delete errors;
@@ -341,18 +301,15 @@ public:
         delete dNetOutput;
         delete dNetHidden;
         delete outputDerivative;
-        
-
-        //cout << "Number of epochs = " << count << endl;
     }
 
-#pragma endregion
+    #pragma endregion
 };
 
 int main(int argc, char *argv[])
 {
     // Declares and reads the main values of the dataset input
-    int datasetLength, inputLength, outputLength, hiddenLength = atoi(argv[1]);
+    int datasetLength, inputLength, outputLength, hiddenLength = atoi(argv[1]), num_threads = atoi(argv[4]);
     double trainingRate = atof(argv[2]), threshold = atof(argv[3]);
 
     cin >> datasetLength >> inputLength >> outputLength;
@@ -382,7 +339,7 @@ int main(int argc, char *argv[])
     MLP *mlp = new MLP(inputLength, hiddenLength, outputLength);
 
     // Executes the neural network training
-    mlp->backPropagation(input, output, datasetLength/10, trainingRate, threshold);
+    mlp->backPropagation(input, output, datasetLength/2, trainingRate, threshold, num_threads);
 
 
     #pragma region Testing
@@ -392,27 +349,12 @@ int main(int argc, char *argv[])
 
     int errorCount = 0;
     
-    for(int i = datasetLength/10; i < datasetLength/5; i++)
+    for(int i = datasetLength/2; i < datasetLength; i++)
     {
         Xp = input[i];
-        state = mlp->forward(Xp);
-        //cout << "Test " << (i+1) << ":" << endl;
-        //cout << "\tExpected: " << output[i][0] << endl;
-        //cout << "\tObtained: " << state.fNetOutput[0] << '\n';
-        if(output[i][0] != round(state.fNetOutput[0])) errorCount++;
-        //cout << round(state.fNetOutput[0]) << '\n';
+        state = mlp->forward(Xp, num_threads);
+        if(!equalVectors(output[i], state.fNetOutput, outputLength)) errorCount++;
     }
-
-    /*for(int i = 0; i < datasetLength; i++)
-    {
-        Xp = input[i];
-        state = mlp->forward(Xp);
-        //cout << "Test " << (i+1) << ":" << endl;
-        //cout << "\tExpected: " << output[i][0] << endl;
-        //cout << "\tObtained: " << state.fNetOutput[0] << '\n';
-        if(output[i][0] != round(state.fNetOutput[0])) errorCount++;
-        //cout << round(state.fNetOutput[0]) << '\n';
-    }*/
 
     int nTests = datasetLength/2;
     cout << "Number of tests = " << nTests << endl;
