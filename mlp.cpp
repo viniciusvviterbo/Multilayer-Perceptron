@@ -1,3 +1,20 @@
+/*
+ * Grupo: Lincoln Antunes, Mateus Alberto e Vinícius Viterbo
+ * Para cada versão, rodamos 5 vezes e tiramos uma média do tempo
+ * Tempo sequencial: 21,6772 segundos
+ * Tempo paralelo 2 threads: 15,2722 segundos 
+ *      speedup = 1,42
+ * Tempo paralelo 4 threads: 14,0136 segundos
+ *      speedup = 1,55
+ * Tempo paralelo 8 threads: 14,3422 segundos
+ *      speedup = 1,51
+ * Obs.: o tempo paralelo com 8 threads pode ter ficado um pouco
+ *       pior do que com 4 threads por não ter 8 threads disponíveis
+ *       para executar a todo momento 
+ */
+
+
+
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +33,7 @@ double *matrixVectorMultiplication(double **matrix, double *vec, int rowCountMat
     double *result =  (double*) calloc(rowCountMatrix, sizeof(double));
     if (columnCountMatrix == rowCountVector + 1)
     {
-        #pragma omp parallel for num_threads(num_threads)
+        #pragma omp parallel for simd num_threads(num_threads)
         for (int i = 0; i < rowCountMatrix; i++)
         {
             for (int j = 0; j < rowCountVector; j++)
@@ -35,6 +52,7 @@ void vectorMatrixMultiplication(double *result, double *vec, double **matrix, in
     double sum;
     if (columnCountVector == rowCountMatrix)
     {
+        #pragma omp parallel for simd private(sum) num_threads(num_threads)
         for (int i = 0; i < columnCountMatrix; i++)
         {
             sum = 0;
